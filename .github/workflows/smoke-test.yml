@@ -1,0 +1,35 @@
+name: Smoke tests (Netlify + Render)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Smoke test endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required secrets
+        id: check
+        run: |
+          if [ -z "${{ secrets.NETLIFY_URL }}" ] && [ -z "${{ secrets.RENDER_URL }}" ]; then
+            echo "No NETLIFY_URL or RENDER_URL secrets configured. Failing the job.";
+            exit 1;
+          fi
+
+      - name: Test Netlify frontend
+        if: ${{ secrets.NETLIFY_URL }}
+        env:
+          NETLIFY_URL: ${{ secrets.NETLIFY_URL }}
+        run: |
+          echo "Testing frontend at $NETLIFY_URL";
+          curl --fail --silent --show-error --location "$NETLIFY_URL" -o /dev/null;
+
+      - name: Test Render backend health
+        if: ${{ secrets.RENDER_URL }}
+        env:
+          RENDER_URL: ${{ secrets.RENDER_URL }}
+        run: |
+          echo "Testing backend health at $RENDER_URL/health";
+          curl --fail --silent --show-error --location "$RENDER_URL/health" -o /dev/null;
