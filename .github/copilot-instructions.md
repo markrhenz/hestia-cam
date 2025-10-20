@@ -1,3 +1,33 @@
+## Copilot instructions — Hestia Cam (concise)
+
+Goal: make small, safe edits that keep the PWA installable and the PeerJS client/server in sync.
+
+Architecture (short)
+- Frontend: `hestia-cam-main/` — static PWA, deploy to Netlify. Key: `index.html`, `sw.js`, `manifest.json`, `netlify/functions/peer-host.js`.
+- Backend: `hestia-cam-server/` — Node PeerJS signalling server (Render). Key: `server.js`, `package.json`.
+- Runtime: client connects to `wss://<PEER_HOST>/peerjs/myapp`; `PEER_HOST` is provided at runtime via the Netlify function.
+
+Quick dev & deploy commands
+- Frontend (local quick test): `cd hestia-cam-main && python -m http.server 8000` (HTTPS required for camera). Use ngrok or Netlify for full tests.
+- Backend (local): `cd hestia-cam-server && npm install && node server.js`.
+- Deploy: Netlify base dir `hestia-cam/hestia-cam-main` (publish `.`). Render root `hestia-cam/hestia-cam-server` (build `npm install`, start `npm start`).
+
+Patterns & integration points
+- Runtime-config: frontend fetches `/.netlify/functions/peer-host` → sets `window.__PEER_HOST` (preferred over hardcoding).
+- SW: network-first for navigation, cache-first for assets; include `/offline.html` and icons in precache.
+- PeerJS: server mount and client `path` must match exactly (`/peerjs/myapp`).
+
+What to check before PR
+- Ensure `PEER_OPTIONS.host/port/secure` derive from `window.__PEER_HOST` or `location.hostname`.
+- Confirm manifest icons exist at `/icons/` (192/512) and are referenced by `manifest.json`.
+- Verify service worker scope and that `/offline.html` is cached.
+
+Files to open first: `index.html`, `sw.js`, `manifest.json`, `netlify/functions/peer-host.js`, `server.js`, `package.json`.
+
+PR style
+- Small, scoped commits. Default to non-breaking runtime flags and preserve mobile attributes (`playsinline`, `autoplay`).
+
+If you want broader changes (CI, deploy automation, TWA packaging), ask and I will prepare a focused PR with tests and docs.
 ## Hestia Cam — Copilot instructions (short and actionable)
 
 This file gives focused guidance so an AI coding agent can be immediately productive in this repository.
